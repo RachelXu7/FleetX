@@ -157,6 +157,8 @@ class GPTModule(LanguageModule):
         tokenizer_class, pretrained_name = MODEL_CLASSES[model_name]
         self.tokenizer = tokenizer_class.from_pretrained(pretrained_name)
 
+        paddle.set_default_dtype("float16")
+
         if self.nranks == 1:
             model_setting.pop("sequence_parallel")
             model = gpt.GPTForPretraining(gpt.GPTModel(**model_setting))
@@ -173,6 +175,8 @@ class GPTModule(LanguageModule):
         if 'Quantization' in self.configs.keys(
         ) and self.configs.Quantization.enable:
             model = self.qat_model(model)
+        
+        paddle.set_default_dtype("float32")
 
         return model
 
