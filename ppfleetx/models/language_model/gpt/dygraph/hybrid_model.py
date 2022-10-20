@@ -376,7 +376,10 @@ class TransformerDecoder(nn.Layer):
         self.recompute_granularity = recompute_granularity
         self.sequence_parallel = sequence_parallel
         if norm == "LayerNorm":
+            ori_dtype = paddle.get_default_dtype()
+            paddle.set_default_dtype("float32")
             self.norm = nn.LayerNorm(hidden_size, epsilon=1e-5)
+            paddle.set_default_dtype(ori_dtype)
             # if sequence parallel is true,
             # register hook to all_reduce gradient of weight, bias 
             if self.sequence_parallel:
@@ -522,8 +525,12 @@ class TransformerDecoderLayer(nn.Layer):
             has_bias=True,
             fuse_matmul_bias=fused_linear)
 
+        ori_dtype = paddle.get_default_dtype()
+        paddle.set_default_dtype("float32")
         self.norm1 = nn.LayerNorm(d_model, epsilon=1e-5)
         self.norm2 = nn.LayerNorm(d_model, epsilon=1e-5)
+        paddle.set_default_dtype(ori_dtype)
+
         if self.sequence_parallel:
             # if sequence parallel is true, register hook to all_reduce gradient of bias 
             self.norm1.weight.register_hook(all_reduce_gradient_hook)
